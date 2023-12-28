@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="5d502a59-554b-42d2-85cf-b696d5063e98" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="payloadapiFlow" doc:id="76d53e64-c92a-4cc2-97e7-f1e9a2169d0a" >
+		<http:listener doc:name="Listener" doc:id="1e78fbed-4b0d-4358-996f-1194360e0b11" config-ref="HTTP_Listener_config" path="/payload" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2d4d84b9-518d-417a-a3ce-252faff248f1" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="30df8b62-28ce-43b9-b306-5b685cfc7c0a" message="#[payload.colleges.branchDetails.branch]"/>
+		<set-variable value="#[payload.colleges.collegeName]" doc:name="Set Variable" doc:id="f5f0c222-5b64-4b48-9376-02dd53d8614c" variableName="retvar"/>
+		<ee:transform doc:name="Transform Message" doc:id="8982a6af-7863-46d3-b815-a95646e79433" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"pay":"entering choice"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="c32e8b36-f31d-4300-a8f6-3aac630e9db7" >
+			<when expression='#[vars.retvar=="KLU"]'>
+				<ee:transform doc:name="Transform Message" doc:id="f2a8be02-70c8-4c8d-b776-218e0cdb70fc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"retvar":vars.retvar
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="af3a8cfd-b6a9-4561-b9e4-80de0e9fd027" message="#[vars.retvar]"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="015414e5-0921-49cc-a3f5-f600b7ed8175" message='#["no record found"]'/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
